@@ -12,8 +12,8 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 
-// TODO TO BE REMOVED
-#define MSG_CONFIRM 0
+// // TODO TO BE REMOVED
+// #define MSG_CONFIRM 0
 
 #define RECV_TIMEOUT 60
 
@@ -29,7 +29,7 @@
 */
 #define FILE_PATH_SIZE 60
 #define HEADER_SIZE sizeof(char) + 2 * sizeof(short) + FILE_PATH_SIZE
-#define DATA_SIZE 30000
+#define DATA_SIZE 20000
 #define PKT_SIZE HEADER_SIZE + DATA_SIZE + CRC_SIZE
 #define CRC_SIZE 4
 
@@ -161,6 +161,10 @@ int main(int argc, char *argv[])
             {
                 // Complete transmission
                 complete_flag = 1;
+
+                // TODO REMOVE THIS
+                printf("end flag received!\n");
+
                 break;
             }
 
@@ -191,8 +195,8 @@ int main(int argc, char *argv[])
                 memcpy(data, recv_buf + HEADER_SIZE, data_size);
                 char filepath[65];
                 strncpy(filepath, recv_buf + 5, 60);
-                int dirlen = -1;
-                for (int idx = 0; filepath[idx] != '\0'; idx++)
+                int dirlen = 1, idx = 0;
+                for (; filepath[idx] != '\0'; idx++)
                 {
                     if (filepath[idx] == '/')
                     {
@@ -213,12 +217,12 @@ int main(int argc, char *argv[])
                 strcat(filepath, ".recv");
 
                 FILE *fp = fopen(filepath, file_option);
-                if (file_option[0] == 'w')
+                if (*file_option == 'w')
                 {
                     file_option = "a";
                 }
 
-                if (!fp || fwrite(data, 1, sizeof(data), fp) != sizeof(data))
+                if (!fp || fwrite(data, 1, data_size, fp) != data_size)
                 {
                     printf("Failed to open or create the given file.\n");
                     free(data);

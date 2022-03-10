@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
   /* sendfile socket */
   int sockfd;
   struct timeval tv;
-  tv.tv_sec = 2;
+  tv.tv_sec = 5;
   tv.tv_usec = 0;
 
   /* variables for identifying the server */
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   const int PACKET_LEN = 2;
   const int FILE_LEN = 60;
   const int HEADER_LEN = FLAG_LEN + SEND_ID_LEN + PACKET_LEN + FILE_LEN; // 65
-  const int DATA_LEN = 30000;
+  const int DATA_LEN = 20000;
   const int CRC_LEN = 4;
   int total_size = HEADER_LEN + DATA_LEN + CRC_LEN; // 30069
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
   /* handle file */
   FILE *fptr;
-  char file_path[sizeof(file_info_input)];
+  char file_path[60];//[sizeof(file_info_input)];
   char file_path_padding[FILE_LEN];
   char *file_data;
   short bytes_read;
@@ -189,14 +189,15 @@ int main(int argc, char **argv) {
 
       receive_count = recvfrom(sockfd, receive_buffer, RECEIVE_SIZE, MSG_WAITALL, (struct sockaddr *)&sin, &addr_len);
       if (receive_count <= 0) {
-        printf("receive ack packet from sendfile error, resend packet");
+        perror("receive ack packet from sendfile error\n");
+        printf("resend packet\n");
       } else {
         receive_id = receive_buffer[1];
         if ((char)receive_id == (char)send_id) {
           send_id++;
           break;
         } else {
-          printf("receive different ID, resend packet");
+          printf("receive different ID, resend packet\n");
         }
       }
     }
