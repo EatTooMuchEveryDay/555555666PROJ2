@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
   /* sendfile socket */
   int sockfd;
   struct timeval tv;
-  tv.tv_sec = 5;
+  tv.tv_sec = 3;
   tv.tv_usec = 0;
 
   /* variables for identifying the server */
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
   /* handle file */
   FILE *fptr;
-  char file_path[60];//[sizeof(file_info_input)];
+  char file_path[FILE_LEN];//[sizeof(file_info_input)];
   char file_path_padding[FILE_LEN];
   char *file_data;
   short bytes_read;
@@ -111,23 +111,24 @@ int main(int argc, char **argv) {
   port = atoi(receiver_info);
 
   strcpy(file_path, file_info_input);
-  char *file_info = strtok(file_info_input, "/");
-  if (file_info == NULL) {
-    printf(
-        "Invalid command line input, should contain subdirectory and filename\
-              and in the format of subdir/filename.");
-    exit(1);
-  }
-  subdir = file_info;
-  file_info = strtok(NULL, "/");
-  if (file_info == NULL) {
-    printf(
-        "Invalid command line input, should contain subdirectory and filename\
-              and in the format of subdir/filename.");
-    exit(1);
-  }
-  filename = file_info;
-  printf("Input from terminal %s, %hu, %s, %s\n", host, port, subdir, filename);
+  // char *file_info = strtok(file_info_input, "/");
+  // if (file_info == NULL) {
+  //   printf(
+  //       "Invalid command line input, should contain subdirectory and filename\
+  //             and in the format of subdir/filename.");
+  //   exit(1);
+  // }
+  // subdir = file_info;
+  // file_info = strtok(NULL, "/");
+  // if (file_info == NULL) {
+  //   printf(
+  //       "Invalid command line input, should contain subdirectory and filename\
+  //             and in the format of subdir/filename.");
+  //   exit(1);
+  // }
+  // filename = file_info;
+  // printf("Input from terminal %s, %hu, %s, %s\n", host, port, subdir, filename);
+  printf("Input from terminal %s, %hu, %s\n", host, port, file_path);
 
   /* create a socket */
   if ((sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
@@ -189,7 +190,7 @@ int main(int argc, char **argv) {
 
       receive_count = recvfrom(sockfd, receive_buffer, RECEIVE_SIZE, MSG_WAITALL, (struct sockaddr *)&sin, &addr_len);
       if (receive_count <= 0) {
-        perror("receive ack packet from sendfile error\n");
+        perror("receive ack packet from sendfile error");
         printf("resend packet\n");
       } else {
         receive_id = receive_buffer[1];
@@ -203,11 +204,11 @@ int main(int argc, char **argv) {
     }
   }
   printf("[send data finished]\n");
-  printf("[send end packet]");
+  printf("[send end packet]\n");
 
   /* send end packet to receiver and exit */
   memset(send_buffer, 0, total_size);
-  memset(send_buffer, 0, 1); // flag is 1, end packet
+  memset(send_buffer, 1, 1); // flag is 1, end packet
   count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
   if (count <= 0) {
     perror("send end socket error");

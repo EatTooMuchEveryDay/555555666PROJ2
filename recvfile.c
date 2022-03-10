@@ -144,6 +144,18 @@ int main(int argc, char *argv[])
             }
         }
 
+        char end_flag = *recv_buf;
+        if (end_flag)
+        {
+            // Complete transmission
+            complete_flag = 1;
+
+            // TODO REMOVE THIS
+            printf("end flag received!\n");
+
+            break;
+        }
+
         // Check CRC
         if (crc32b(recv_buf, PKT_SIZE - CRC_SIZE) != *(unsigned *)(recv_buf + PKT_SIZE - CRC_SIZE))
         {
@@ -156,18 +168,6 @@ int main(int argc, char *argv[])
         else
         {
             // CRC check passed
-            char end_flag = *recv_buf;
-            if (end_flag)
-            {
-                // Complete transmission
-                complete_flag = 1;
-
-                // TODO REMOVE THIS
-                printf("end flag received!\n");
-
-                break;
-            }
-
             short recvID = (short)ntohs(*(short *)(recv_buf + 1));
             short data_size = (short)ntohs(*(short *)(recv_buf + 3));
 
