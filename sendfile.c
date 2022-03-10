@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
   short RECEIVE_SIZE = 3;
   char *send_buffer;
   char *receive_buffer;
-  char send_id;
+  short send_id;
   char receive_id;
   unsigned int crc;
   int send_count;
@@ -84,7 +84,6 @@ int main(int argc, char **argv) {
 
   /* handle file */
   FILE *fptr;
-  unsigned long file_len_total;
   char file_path[sizeof(file_info_input)];
   char file_path_padding[FILE_LEN];
   char *file_data;
@@ -144,7 +143,7 @@ int main(int argc, char **argv) {
   sin.sin_port = htons(port);
 
   /* initialize variables */
-  send_id = (char)0;
+  send_id = (short)1;
   strncpy(file_path_padding, file_path, FILE_LEN);
   send_buffer = malloc(total_size);
   receive_buffer = malloc(RECEIVE_SIZE);
@@ -155,21 +154,17 @@ int main(int argc, char **argv) {
     printf("open file error");
     abort();
   }
-  // fseek(fptr, 0L, SEEK_END);
-  // file_len_total = ftell(fptr);
-  // fseek(fptr, 0L, SEEK_SET);
-  // printf("file length is %lu\n", file_len_total);
 
   file_data = (char *)malloc(total_size * sizeof(char));
   while ((bytes_read = fread(file_data, 1, DATA_LEN, fptr)) > 0) {
     memset(send_buffer, 0, total_size);
 
     // TODO packet design may change
-    memset(send_buffer, 0, 1);
-    memset(send_buffer + 1, send_id, 1);
-    *(short *)(send_buffer + 2) = htons(bytes_read);
-    memcpy(send_buffer + 4, file_path_padding, FILE_LEN);
-    memcpy(send_buffer + 64, file_data, DATA_LEN);
+    memset(send_buffer, 0, 0); // flag is 0, packet containing data
+    *(short *)(send_buffer + 1) = htons(send_id);
+    *(short *)(send_buffer + 3) = htons(bytes_read);
+    memcpy(send_buffer + 5, file_path_padding, FILE_LEN);
+    memcpy(send_buffer + 65, file_data, DATA_LEN);
 
     memset(file_data, 0, DATA_LEN);
 
@@ -187,23 +182,32 @@ int main(int argc, char **argv) {
         send_count += count;
       }
 
+      printf("[send data] start %d\n", bytes_read);
+
       receive_count = recvfrom(sockfd, receive_buffer, RECEIVE_SIZE, MSG_WAITALL, (struct sockaddr *)&sin, &addr_len);
       if (receive_count <= 0) {
-        perror("receive ack packet from sendfile error");
+        printf("receive ack packet from sendfile error, resend packet");
       } else {
         receive_id = receive_buffer[1];
         if ((char)receive_id == (char)send_id) {
-
-          // TODO change to sequence number
-          if (send_id == 1) {
-            send_id = (char)0;
-          } else if (send_id == 0) {
-            send_id = (char)1;
-          }
+          send_id++;
           break;
+        } else {
+          printf("receive different ID, resend packet");
         }
       }
     }
+  }
+  printf("[send data finished]\n");
+  printf("[send end packet]");
+
+  /* send end packet to receiver and exit */
+  memset(send_buffer, 0, total_size);
+  memset(send_buffer, 0, 1); // flag is 1, end packet
+  count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
+  if (count <= 0) {
+    perror("send end socket error");
+    abort();
   }
 
   printf("[completed]\n");
