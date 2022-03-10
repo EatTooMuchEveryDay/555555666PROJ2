@@ -66,11 +66,14 @@ int main(int argc, char **argv) {
   socklen_t addr_len = sizeof(struct sockaddr_in);
   
   /* packet info */
-  const int DATA_LEN = 25000;
-  const int FILE_LEN = 60;
+  const int FLAG_LEN = 1;
+  const int SEND_ID_LEN = 2;
   const int PACKET_LEN = 2;
+  const int FILE_LEN = 60;
+  const int HEADER_LEN = FLAG_LEN + SEND_ID_LEN + PACKET_LEN + FILE_LEN; // 65
+  const int DATA_LEN = 30000;
   const int CRC_LEN = 4;
-  int total_size = DATA_LEN + FILE_LEN + PACKET_LEN + CRC_LEN;
+  int total_size = HEADER_LEN + DATA_LEN + CRC_LEN; // 30069
 
   short RECEIVE_SIZE = 3;
   char *send_buffer;
@@ -168,8 +171,8 @@ int main(int argc, char **argv) {
 
     memset(file_data, 0, DATA_LEN);
 
-    crc = crc32b(send_buffer, DATA_LEN + FILE_LEN + PACKET_LEN);
-    memcpy(send_buffer + (DATA_LEN + FILE_LEN + PACKET_LEN), &crc, CRC_LEN);
+    crc = crc32b(send_buffer, HEADER_LEN + DATA_LEN);
+    memcpy(send_buffer + (HEADER_LEN + DATA_LEN), &crc, CRC_LEN);
 
     while (1) {
       send_count = 0;
