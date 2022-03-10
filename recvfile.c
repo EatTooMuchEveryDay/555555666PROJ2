@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
                 cur_seq = recvID;
                 bytes_received += data_size;
-                printf("[recv data] %d %u ACCEPTED\n", (bytes_received - data_size), data_size);
+                printf("[recv data] %d %u ACCEPTED[in-order]\n", (bytes_received - data_size), data_size);
 
                 // Write the data into specific file
                 char *data = malloc(data_size);
