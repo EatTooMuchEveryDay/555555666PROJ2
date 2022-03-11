@@ -12,7 +12,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-unsigned int crc32b(char *message, long message_len) {
+unsigned int crc32b(char *message, long message_len) 
+{
   int i, j;
     unsigned int byte, crc, mask;
 
@@ -36,10 +37,12 @@ unsigned int crc32b(char *message, long message_len) {
    return ~crc;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
 
   /* check number of command line parameters */
-  if (argc != 5) {
+  if (argc != 5) 
+  {
     printf(
         "Invalid command line input, should have four parameters \
             in the format of -r <recv host>:<recv port> -f <subdir>/<filename>.");
@@ -57,9 +60,9 @@ int main(int argc, char **argv) {
 
   /* sendfile socket */
   int sockfd;
-  struct timeval tv;
-  tv.tv_sec = 3;
-  tv.tv_usec = 0;
+  struct timeval timeout;
+  timeout.tv_sec = 3;
+  timeout.tv_usec = 0;
 
   /* variables for identifying the server */
   struct sockaddr_in sin;
@@ -94,7 +97,8 @@ int main(int argc, char **argv) {
 
   /* split terminal input to get receiver and file information */
   char *receiver_info = strtok(receiver_info_input, ":");
-  if (receiver_info == NULL) {
+  if (receiver_info == NULL) 
+  {
     printf(
         "Invalid command line input, should contain host and port\
               and in the format of host:port.");
@@ -102,7 +106,8 @@ int main(int argc, char **argv) {
   }
   host = receiver_info;
   receiver_info = strtok(NULL, ":");
-  if (receiver_info == NULL) {
+  if (receiver_info == NULL) 
+  {
     printf(
         "Invalid command line input, should contain host and port\
               and in the format of host:port.");
@@ -131,11 +136,13 @@ int main(int argc, char **argv) {
   printf("Input from terminal %s, %hu, %s\n", host, port, file_path);
 
   /* create a socket */
-  if ((sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+  if ((sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) 
+  {
     perror("opening UDP socket error");
     abort();
   }
-  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) < 0) {
+  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof timeout) < 0) 
+  {
     perror("setting UDP socket option error");
     abort();
   }
@@ -154,13 +161,15 @@ int main(int argc, char **argv) {
 
   /* operate send file */
   fptr = fopen(file_path, "rb");
-  if (!fptr) {
+  if (!fptr) 
+  {
     printf("open file error");
     abort();
   }
 
   file_data = (char *)malloc(total_size * sizeof(char));
-  while ((bytes_read = fread(file_data, 1, DATA_LEN, fptr)) > 0) {
+  while ((bytes_read = fread(file_data, 1, DATA_LEN, fptr)) > 0) 
+  {
     memset(send_buffer, 0, total_size);
 
     // TODO packet design may change
@@ -175,11 +184,14 @@ int main(int argc, char **argv) {
     crc = crc32b(send_buffer, HEADER_LEN + DATA_LEN);
     memcpy(send_buffer + (HEADER_LEN + DATA_LEN), &crc, CRC_LEN);
 
-    while (1) {
+    while (1) 
+    {
       send_count = 0;
-      while (send_count < total_size) {
+      while (send_count < total_size) 
+      {
         count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
-        if (count <= 0) {
+        if (count <= 0) 
+        {
           perror("send socket error");
           abort();
         }
@@ -189,15 +201,21 @@ int main(int argc, char **argv) {
       printf("[send data] start %d\n", bytes_read);
 
       receive_count = recvfrom(sockfd, receive_buffer, RECEIVE_SIZE, MSG_WAITALL, (struct sockaddr *)&sin, &addr_len);
-      if (receive_count <= 0) {
+      if (receive_count <= 0) 
+      {
         perror("receive ack packet from sendfile error");
         printf("resend packet\n");
-      } else {
+      } 
+      else 
+      {
         receive_id = receive_buffer[1];
-        if ((char)receive_id == (char)send_id) {
+        if ((char)receive_id == (char)send_id) 
+        {
           send_id++;
           break;
-        } else {
+        } 
+        else 
+        {
           printf("receive different ID, resend packet\n");
         }
       }
@@ -210,13 +228,17 @@ int main(int argc, char **argv) {
   memset(send_buffer, 0, total_size);
   memset(send_buffer, 1, 1); // flag is 1, end packet
   count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
-  if (count <= 0) {
+  if (count <= 0) 
+  {
     perror("send end socket error");
     abort();
   }
 
   printf("[completed]\n");
   close(sockfd);
+  free(send_buffer);
+  free(receive_buffer);
+  
   return 0;
 }
 
