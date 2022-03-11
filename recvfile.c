@@ -112,10 +112,6 @@ int mknesteddir(char *dir)
                 int t = mkdir(str, S_IRWXU | S_IRWXG | S_IRWXO);
                 if (t < 0)
                 {
-
-                    // TODO REMOVE THIS
-                    printf("no!!!!!! %s", str);
-
                     return t;
                 }
             }
@@ -211,18 +207,6 @@ int main(int argc, char *argv[])
             }
         }
 
-        char end_flag = *recv_buf;
-        if (end_flag)
-        {
-            // Complete transmission
-            complete_flag = 1;
-
-            // TODO REMOVE THIS
-            printf("end flag received!\n");
-
-            break;
-        }
-
         // Check CRC
         if (crc32b(recv_buf, PKT_SIZE - CRC_SIZE) != *(unsigned *)(recv_buf + PKT_SIZE - CRC_SIZE))
         {
@@ -235,6 +219,16 @@ int main(int argc, char *argv[])
         else
         {
             // CRC check passed
+
+            // Check end flag
+            char end_flag = *recv_buf;
+            if (end_flag)
+            {
+                // Complete transmission
+                complete_flag = 1;
+                break;
+            }
+
             short recvID = (short)ntohs(*(short *)(recv_buf + 1));
             short data_size = (short)ntohs(*(short *)(recv_buf + 3));
 
@@ -326,6 +320,10 @@ int main(int argc, char *argv[])
     if (complete_flag)
     {
         printf("[completed]\n");
+    }
+    else
+    {
+        printf("[incomplete transmission]\n");
     }
 
     return 0;
