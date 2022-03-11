@@ -127,6 +127,7 @@ int main(int argc, char **argv)
   int send_count;
   int count;
   int receive_count;
+  int end_packet_loop_count;
 
   /* handle file */
   FILE *fptr;
@@ -269,11 +270,22 @@ int main(int argc, char **argv)
   /* send end packet to receiver and exit */
   memset(send_buffer, 0, total_size);
   memset(send_buffer, 1, 1); // flag is 1, end packet
-  count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
-  if (count <= 0)
-  {
-    perror("send end socket error");
-    abort();
+
+  // crc = crc32b(send_buffer, FLAG_LEN);
+  // memcpy(send_buffer + (FLAG_LEN), &crc, CRC_LEN);
+
+  crc = crc32b(send_buffer, HEADER_LEN + DATA_LEN);
+  memcpy(send_buffer + (HEADER_LEN + DATA_LEN), &crc, CRC_LEN);
+  
+  end_packet_loop_count = 10;
+  while (end_packet_loop_count > 0) {
+    count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
+    if (count <= 0)
+    {
+      perror("send end socket error");
+      abort();
+    }
+    end_packet_loop_count--;
   }
 
   printf("[completed]\n");
