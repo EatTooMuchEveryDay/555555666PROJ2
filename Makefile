@@ -1,21 +1,13 @@
-CC	 	= gcc
-LD	 	= gcc
-CFLAGS	 	= -Wall -g
+all: sender receiver
 
-LDFLAGS	 	=  
-DEFS 	 	=
+sender: sendfile.c
+	gcc -o sendfile sendfile.c
 
-all:	sendfile recvfile 
-
-server: sendfile.c
-	$(CC) $(DEFS) $(CFLAGS) $(LIB) -o sendfile sendfile.c
-
-client: recvfile.c
-	$(CC) $(DEFS) $(CFLAGS) $(LIB) -o recvfile recvfile.c
+receiver: recvfile.c
+	gcc -o recvfile recvfile.c
 
 clean:
 	rm -f *.o
 	rm -f *~
-	rm -f core.*.*
 	rm -f sendfile
 	rm -f recvfile

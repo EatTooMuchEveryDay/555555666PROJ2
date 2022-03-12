@@ -21,7 +21,7 @@
 | seqno      | 2byte       |
 | packetsize | 2byte       |
 | filepath   | 60byte      |
-| data       | 0~30000byte |
+| data       | 0~20000byte |
 | crc        | 4byte       |
 */
 #define FILE_PATH_SIZE 60
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
             short recvID = (short)ntohs(*(short *)(recv_buf + 1));
             short data_size = (short)ntohs(*(short *)(recv_buf + 3));
 
-            if (recvID <= cur_seq)
+            if (recvID != cur_seq + 1)
             {
                 // Duplicated previous packets that should be ignored
                 printf("[recv data] %d %u IGNORED\n", (bytes_received - data_size), data_size);
@@ -247,15 +247,15 @@ int main(int argc, char *argv[])
                 if (cur_seq == 0)
                     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout)); // Set the timeout value
 
-                cur_seq = recvID;
+                cur_seq++;
                 bytes_received += data_size;
                 printf("[recv data] %d %u ACCEPTED[in-order]\n", (bytes_received - data_size), data_size);
 
                 // Write the data into specific file
                 char *data = malloc(data_size);
                 memcpy(data, recv_buf + HEADER_SIZE, data_size);
-                char filepath[65];
-                strncpy(filepath, recv_buf + 5, 60);
+                char filepath[FILE_PATH_SIZE + 5];
+                strncpy(filepath, recv_buf + 5, FILE_PATH_SIZE);
                 int dirlen = -1, idx = 0;
                 for (; filepath[idx] != '\0'; idx++)
                 {
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
                 dirlen++;
                 if (dirlen > 0)
                 {
-                    char dir[60];
+                    char dir[FILE_PATH_SIZE];
                     strncpy(dir, filepath, dirlen);
 
                     printf("dir path: %s\n", dir);

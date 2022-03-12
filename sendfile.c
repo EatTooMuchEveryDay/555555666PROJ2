@@ -116,13 +116,13 @@ int main(int argc, char **argv)
   const int HEADER_LEN = FLAG_LEN + SEND_ID_LEN + PACKET_LEN + FILE_LEN; // 65
   const int DATA_LEN = 20000;
   const int CRC_LEN = 4;
-  int total_size = HEADER_LEN + DATA_LEN + CRC_LEN; // 30069
+  int total_size = HEADER_LEN + DATA_LEN + CRC_LEN; // 20069
 
   short RECEIVE_SIZE = 3;
   char *send_buffer;
   char *receive_buffer;
   short send_id;
-  char receive_id;
+  short receive_id;
   unsigned int crc;
   int send_count;
   int count;
@@ -251,8 +251,8 @@ int main(int argc, char **argv)
       }
       else
       {
-        receive_id = receive_buffer[1];
-        if ((char)receive_id == (char)send_id)
+        receive_id = (short)ntohs(*(short *)receive_buffer);
+        if (receive_id == send_id)
         {
           send_id++;
           break;
@@ -276,9 +276,10 @@ int main(int argc, char **argv)
 
   crc = crc32b(send_buffer, HEADER_LEN + DATA_LEN);
   memcpy(send_buffer + (HEADER_LEN + DATA_LEN), &crc, CRC_LEN);
-  
+
   end_packet_loop_count = 10;
-  while (end_packet_loop_count > 0) {
+  while (end_packet_loop_count > 0)
+  {
     count = sendto(sockfd, (const char *)send_buffer, total_size, 0, (const struct sockaddr *)&sin, sizeof(sin));
     if (count <= 0)
     {
@@ -292,6 +293,7 @@ int main(int argc, char **argv)
   close(sockfd);
   free(send_buffer);
   free(receive_buffer);
+  free(file_data);
 
   return 0;
 }
