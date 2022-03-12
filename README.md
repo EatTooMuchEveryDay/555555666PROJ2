@@ -8,7 +8,7 @@
 >
 > Xinyu Zhao (xz90@rice.edu)
 
-This project is the course project 2 for COMP 556 @ CS.Rice University
+This project is the course project 2 for COMP 556 @ Rice University
 
 
 
@@ -76,6 +76,25 @@ SequenceNumber(i+1)=SequenceNumber(i)+1
 $$
 Then the fault in the original protocol should have been fixed. This indicates how we arranged the transimission process in our implementation.
 
+### Packet Structure
+
+#### Data Packet (sendfile -> recvfile)
+
+| name       | length                     |
+| ---------- | -------------------------- |
+| endflag    | 1 byte (only 1 bit useful) |
+| seqno      | 2 byte                     |
+| packetsize | 2 byte                     |
+| filepath   | 60 byte                    |
+| data       | 0~20000 byte               |
+| crc        | 4 byte                     |
+
+#### ACK (recvfile -> sendfile)
+
+| name  | length |
+| ----- | ------ |
+| seqno | 2 byte |
+
 ### Memory Management
 
 Since we are required to limit the memory usage of our implementation into approximately 1MB, we have carefully designed the size of each buffer in both sending and receiving procedures. The following table shows them in details:
@@ -102,28 +121,7 @@ Each of these buffer would be allocated with corresponding memory only once. The
 
 Both sender and receiver should exit gracefully.
 
-For the sender, when it has sent all the data, it will additionally send an end packet (endflag = 1) to let the receiver know that this is the end of the transmission. After the sender finishes sending the end packet, it will exit.
+For the sender, when it has sent all the data, it will additionally send an end packet (endflag = 1) to let the receiver know that this is the end of the transmission. After the sender finishes sending the end packet, it will exit. Since the last end packet may be lost in the network. The sender would countinously send 10 end packets before exiting.
 
 For the receiver, after receiving the end packet (endflag = 1) from the sender, it will exit.
-
-### Packet Structure
-
-#### Data Packet (sendfile -> recvfile)
-
-| name       | length                     |
-| ---------- | -------------------------- |
-| endflag    | 1 byte (only 1 bit useful) |
-| seqno      | 2 byte                     |
-| packetsize | 2 byte                     |
-| filepath   | 60 byte                    |
-| data       | 0~20000 byte               |
-| crc        | 4 byte                     |
-
-#### ACK (recvfile -> sendfile)
-
-| name  | length |
-| ----- | ------ |
-| seqno | 2 byte |
-
-## Showcase
 
