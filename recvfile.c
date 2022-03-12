@@ -212,8 +212,6 @@ int main(int argc, char *argv[])
         {
             // CRC check failed
             printf("[recv corrupt packet]\n");
-
-            // TODO REMOVE THIS
             printf("send ack_buf (crc check failed): cur_seq=%d\n", (int)cur_seq);
         }
         else
@@ -236,8 +234,6 @@ int main(int argc, char *argv[])
             {
                 // Duplicated previous packets that should be ignored
                 printf("[recv data] %d %u IGNORED\n", (bytes_received - data_size), data_size);
-
-                // TODO REMOVE THIS
                 printf("send ack_buf(duplicated): cur_seq=%d\n", (int)cur_seq);
             }
             else
@@ -269,10 +265,6 @@ int main(int argc, char *argv[])
                 {
                     char dir[FILE_PATH_SIZE];
                     strncpy(dir, filepath, dirlen);
-
-                    printf("dir path: %s\n", dir);
-                    printf("file path: %s\n", filepath);
-
                     if (access(dir, F_OK) < 0 && mknesteddir(dir) < 0)
                     {
                         printf("Unable to create file or directory.\n");
